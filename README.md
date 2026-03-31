@@ -6,9 +6,13 @@ A locally-running multi-agent system for deep, interdisciplinary research. Give 
 
 ## What it does
 
-Most research tools search. This one thinks.
+This is version **1.0.0**, and it is meant to improve over time.
 
-The pipeline runs 10 specialised agents in sequence, each building on the last. It pulls from academic databases, book catalogs, and web search simultaneously. It distinguishes between what the field has established, what it has tried and abandoned, where the real gaps are, and what is worth proposing next. A human-in-the-loop design means you review and redirect at three points before the pipeline continues.
+The pipeline runs **10 specialized agents in sequence**, each building on the output of the previous one. It pulls information simultaneously from academic databases, book catalogs, and web search. The system distinguishes between what the field has firmly established, what has been tried and abandoned, where the real gaps are, and what might be worth proposing next. The design keeps a **human-in-the-loop**, with three review points where I can evaluate and redirect the process before the pipeline continues.
+
+I built this pipeline mostly for myself and for my own work and research. When you do research with AI, it is very easy to lose control of the information that appears — whether it should be trusted, how solid it is, or what its real motivation is. Since I mainly do fundamental research, I cannot afford to navigate with uncertain information, unclear motives, or spend my time simply verifying papers suggested by a model.
+
+For that reason, I built this multi-agent system (10 agents for now) that maps, from my perspective, the cognitive tasks required to make an investigation rigorous. The diagram is shown below. I also implemented hard breaks where I manually review the major steps offline. This is the moment where I read, learn, and decide on the trajectory of the problem. Since the system tends to retrieve seminal works and major contributions, by the time I go through these breaks and read the material and analysis it finds, I usually have a clear understanding of the problem situation at hand, and only a few additional steps are needed afterward, to have a clear taste of the environment and current **real** gaps. In that way, I remain in control of the process and do not lose my intellectual contribution. 
 
 ```
 Social → [Break 0] → Grounder → Historian → Gaper
@@ -75,7 +79,7 @@ This means a question like *"What is the place of AI in human life?"* automatica
 
 The pipeline uses Claude as the primary model with automatic fallback:
 
-1. Claude Sonnet 4.5 (primary — all heavy reasoning agents)
+1. Claude Sonnet 4.5 (primary for all heavy reasoning agents)
 2. Claude Haiku 4.5 (lighter agents and fallback)
 3. Ollama `deepseek-r1:8b` (local fallback if Claude API unavailable)
 4. Ollama `llama3.2:3b` (final local fallback)
