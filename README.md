@@ -1,6 +1,6 @@
 # Multi-Agent Research Intelligence Pipeline
 
-A locally-running multi-agent system for deep, interdisciplinary research. Give it a research question — it excavates the intellectual history, maps the gaps, proposes approaches, evaluates their feasibility, synthesises a research narrative, and produces a final document. You stay in control through three mandatory review breaks.
+A locally-running multi-agent system for deep, interdisciplinary research. Give it a research question, it excavates the intellectual history, maps the gaps, proposes approaches, evaluates their feasibility, synthesises a research narrative, and produces a final document. You stay in control through three mandatory review breaks.
 
 ---
 
@@ -65,7 +65,7 @@ Three mandatory review breaks where the pipeline stops, produces a structured su
 
 ## Semantic concept expansion
 
-Before searching, the pipeline translates your research question into its full conceptual territory using a local ConceptNet database (184MB, 2.29 million English edges). A three-layer process — term extraction, ConceptNet neighbourhood, LLM synthesis — determines which of the 23 configured research themes to activate.
+Before searching, the pipeline translates your research question into its full conceptual territory using a local ConceptNet database (184MB, 2.29 million English edges). A three-layer process term extraction, ConceptNet neighbourhood, LLM synthesis, determines which of the 23 configured research themes to activate.
 
 This means a question like *"What is the place of AI in human life?"* automatically activates philosophy of mind, anthropology, sociology, ethics, cognitive science, history, and law — without you having to specify them.
 
