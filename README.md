@@ -108,7 +108,7 @@ Prose formats (blog post, brief, memo) output `.md`. Academic formats (literatur
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/pipeline
+git clone https://github.com/anvix9/basis_research_agents
 cd pipeline
 pip install -r requirements.txt
 cp .env.example .env
