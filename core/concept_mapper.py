@@ -236,7 +236,33 @@ def _match_clusters(
     """
     Match expanded concepts against cluster trigger_concepts.
     Returns (activated_cluster_ids, activated_disciplines, bridge_concepts).
+
+    A cluster activates only if it has MEANINGFUL overlap with the problem:
+    - At least 2 matching concepts, OR
+    - 1 match that is a substantive concept (longer than 5 chars and not a stopword)
+    This prevents single generic word matches (like 'influence' or 'production')
+    from activating entire disciplinary clusters.
     """
+    # Words that should never alone activate a cluster
+    WEAK_TRIGGERS = {
+        'influence', 'production', 'account', 'dimensions', 'units',
+        'taking', 'impact', 'effect', 'role', 'process', 'function',
+        'relationship', 'interaction', 'analysis', 'study', 'research',
+        'approach', 'method', 'model', 'system', 'structure', 'form',
+        'type', 'level', 'factor', 'aspect', 'element', 'component',
+        'change', 'development', 'data', 'results', 'context', 'case',
+        'work', 'field', 'area', 'domain', 'topic', 'issue', 'problem',
+        'affect', 'effects', 'cause', 'causes', 'gene', 'genes',
+        'nature', 'human', 'life', 'world', 'time', 'place', 'space',
+        'general', 'global', 'local', 'social', 'cultural', 'political',
+        'economic', 'natural', 'physical', 'technical', 'modern',
+        'practice', 'theory', 'concept', 'idea', 'question', 'answer',
+        'performance', 'scale', 'content', 'platform', 'network', 'movement',
+        'quality', 'measure', 'balance', 'value', 'community',
+        'thought', 'thinking', 'knowledge', 'understanding', 'experience',
+        'awareness', 'sense', 'feeling', 'mind', 'brain', 'body',
+    }
+
     clusters = concept_map.get("concept_clusters", [])
     activated_cluster_ids = set()
     activated_disciplines = set()
@@ -246,14 +272,30 @@ def _match_clusters(
 
     for cluster in clusters:
         triggers = {t.lower() for t in cluster.get("trigger_concepts", [])}
-        # Check overlap between expanded concepts and trigger concepts
-        overlap = concepts_lower & triggers
-        if overlap:
-            activated_cluster_ids.add(cluster["cluster_id"])
-            for d in cluster.get("disciplines", []):
-                activated_disciplines.add(d)
-            for b in cluster.get("bridge_concepts", []):
-                bridge_concepts.add(b)
+        overlap  = concepts_lower & triggers
+
+        if not overlap:
+            continue
+
+        # Check if overlap is meaningful:
+        # 1. Two or more matching concepts, OR
+        # 2. At least one match that is substantive (not a weak generic word)
+        substantive_matches = [m for m in overlap if m not in WEAK_TRIGGERS]
+        weak_only_matches   = [m for m in overlap if m in WEAK_TRIGGERS]
+
+        is_meaningful = (
+            len(overlap) >= 2 or          # multiple matches
+            len(substantive_matches) >= 1  # at least one non-generic match
+        )
+
+        if not is_meaningful:
+            continue
+
+        activated_cluster_ids.add(cluster["cluster_id"])
+        for d in cluster.get("disciplines", []):
+            activated_disciplines.add(d)
+        for b in cluster.get("bridge_concepts", []):
+            bridge_concepts.add(b)
 
     return (
         list(activated_cluster_ids),
@@ -265,20 +307,54 @@ def _match_clusters(
 def _disciplines_to_themes(disciplines: list[str], config: dict) -> list[str]:
     """
     Map activated disciplines to theme_ids in config.json.
-    Returns theme_ids that are both activated AND present in config.
+    Uses explicit override map first, then fuzzy matching as fallback.
+    Explicit map prevents 'neuroscience' from matching unrelated themes
+    when its cluster was activated by a marginal generic-word match.
     """
     config_theme_ids = {t["theme_id"] for t in config.get("themes", [])}
-    matched = []
+
+    # Explicit discipline → theme_id overrides (highest priority)
+    EXPLICIT_MAP = {
+        "agriculture":              "agriculture_food_systems",
+        "development_studies":      "development_studies",
+        "political_economy":        "economics",
+        "political_ecology":        "environmental_studies",
+        "ecology":                  "biology_life_sciences",
+        "environmental_science":    "environmental_studies",
+        "environmental_philosophy": "environmental_studies",
+        "geography":                "development_studies",
+        "public_policy":            "political_science",
+        "international_relations":  "political_science",
+        "labor_studies":            "economics",
+        "media_studies":            "media_communication",
+        "communication_studies":    "media_communication",
+        "information_science":      "media_communication",
+        "journalism":               "media_communication",
+        "cultural_studies":         "anthropology",
+        "behavioral_economics":     "economics",
+        "social_psychology":        "psychology",
+        "developmental_psychology": "psychology",
+        "clinical_psychology":      "psychology",
+        "evolutionary_psychology":  "psychology",
+        "psychiatry":               "psychology",
+    }
+
+    matched = set()
     for d in disciplines:
-        # Exact match
-        if d in config_theme_ids:
-            matched.append(d)
+        d_lower = d.lower()
+        if d_lower in EXPLICIT_MAP:
+            tid = EXPLICIT_MAP[d_lower]
+            if tid in config_theme_ids:
+                matched.add(tid)
             continue
-        # Fuzzy match — discipline is substring of theme_id or vice versa
+        if d_lower in config_theme_ids:
+            matched.add(d_lower)
+            continue
         for tid in config_theme_ids:
-            if d.lower() in tid.lower() or tid.lower() in d.lower():
-                matched.append(tid)
+            if d_lower in tid.lower() or tid.lower() in d_lower:
+                matched.add(tid)
                 break
+
     return list(dict.fromkeys(matched))
 
 
@@ -286,29 +362,35 @@ def _disciplines_to_themes(disciplines: list[str], config: dict) -> list[str]:
 # LLM synthesis layer
 # ---------------------------------------------------------------------------
 
-SYNTHESIS_SYSTEM = """You are a conceptual knowledge mapper for a research pipeline.
+SYNTHESIS_SYSTEM = """You are a disciplinary relevance filter for a research pipeline.
 
-Given a research problem and its automatically expanded concept network, your job is to:
-1. Identify ALL relevant academic disciplines and research domains this problem touches
-2. Identify bridge concepts that connect different domains
-3. Suggest specific search themes that should be activated
+Your job is NOT to brainstorm every possible connection.
+Your job is to identify the CORE disciplines that a researcher would genuinely search when studying this specific problem.
 
-Be comprehensive — include obvious AND non-obvious disciplines.
-A problem about "AI in human life" should include not just AI/CS but also philosophy, sociology, anthropology, history of technology, ethics, political science, economics, psychology, etc.
+Rules:
+- Only include disciplines where a researcher would actually look for papers on THIS problem
+- Do NOT include disciplines just because they have a tangential connection
+- Do NOT add philosophy of mind, neuroscience, or psychology unless the problem is explicitly about cognition or mind
+- Do NOT add linguistics unless the problem is explicitly about language
+- Do NOT add religious studies unless the problem is explicitly about religion or spirituality
+- If the problem is about agriculture, sustainability, or rural development: include economics, sociology, environmental science, political science, development studies, geography — NOT philosophy of mind, NOT neuroscience
+- If unsure whether a discipline belongs: leave it out
+
+For each suggested theme, provide a specific one-line reason WHY a researcher studying this exact problem would search that discipline.
+If you cannot provide a specific concrete reason, do not include the theme.
 
 Output ONLY valid JSON:
 {
-  "disciplines_identified": ["list of all relevant disciplines"],
-  "bridge_concepts": ["key concepts that bridge multiple disciplines"],
+  "disciplines_identified": ["only truly core disciplines for this specific problem"],
+  "bridge_concepts": ["key concepts connecting the core disciplines"],
   "suggested_themes": [
     {
-      "theme_id": "snake_case_id matching config if possible",
+      "theme_id": "snake_case_id matching config",
       "label": "Human readable label",
-      "relevance_reason": "one line why this theme is relevant to the problem"
+      "relevance_reason": "specific concrete reason why this theme is searched for THIS problem"
     }
   ],
-  "conceptual_translation": "2-3 sentences explaining how you translated this problem into its conceptual territory",
-  "overlooked_angles": ["disciplines or angles that might be non-obvious but important"]
+  "conceptual_translation": "1-2 sentences: what is this problem fundamentally about?"
 }"""
 
 
@@ -317,6 +399,7 @@ def _llm_synthesis(
     raw_terms: list[str],
     expanded_concepts: list[dict],
     activated_clusters: list[str],
+    activated_disciplines: list[str],
     bridge_concepts: list[str],
     config: dict
 ) -> dict:
@@ -333,17 +416,23 @@ def _llm_synthesis(
 
 Raw terms extracted: {', '.join(raw_terms[:15])}
 
-Top expanded concepts (from ConceptNet): {', '.join(top_concepts)}
+Conceptual clusters already activated by automated matching:
+{', '.join(activated_clusters)}
 
-Activated conceptual clusters: {', '.join(activated_clusters)}
+These clusters map to these disciplines:
+{', '.join(sorted(set(activated_disciplines))[:20])}
 
-Bridge concepts identified: {', '.join(bridge_concepts[:20])}
+Available themes in config:
+{json.dumps(config_themes, indent=2)}
 
-Available themes in config: {json.dumps(config_themes, indent=2)}
+Task: Review the activated clusters and disciplines above.
+- Confirm which ones are genuinely relevant to this specific research problem
+- Add any important disciplines that are clearly missing from the activated clusters
+- Remove any disciplines that are clearly off-topic for this specific problem
+- Be conservative: when in doubt, leave a discipline OUT
 
-Based on all of the above, identify the complete disciplinary territory of this problem.
-Be especially thorough about non-obvious connections.
-Match suggested themes to existing config theme_ids where possible."""
+Do NOT add: philosophy of mind, neuroscience, psychology, linguistics, or religious studies
+unless the problem is explicitly about those topics."""
 
     try:
         response = llm.call(prompt, SYNTHESIS_SYSTEM, agent_name="social")
@@ -356,7 +445,6 @@ Match suggested themes to existing config theme_ids where possible."""
             "bridge_concepts": bridge_concepts,
             "suggested_themes": [],
             "conceptual_translation": "",
-            "overlooked_angles": []
         }
 
 
@@ -407,10 +495,12 @@ def expand(problem: str, run_id: str, config: dict) -> dict:
 
     logger.info(f"[ConceptMapper] Expanded to {len(all_concepts)} concepts via ConceptNet")
 
-    # Layer 2: Cluster matching
-    all_concept_list = list(all_concepts)
+    # Layer 2: Cluster matching — ONLY from raw terms, not ConceptNet expansions
+    # ConceptNet expansions are too semantically broad: "agricultural" → "human" →
+    # "consciousness" → philosophy_of_mind. We use raw terms for cluster activation
+    # and ConceptNet expansions only to enrich the LLM synthesis prompt.
     activated_clusters, activated_disciplines, bridge_concepts = _match_clusters(
-        all_concept_list, concept_map
+        raw_terms, concept_map
     )
     logger.info(
         f"[ConceptMapper] Activated {len(activated_clusters)} clusters, "
@@ -429,32 +519,61 @@ def expand(problem: str, run_id: str, config: dict) -> dict:
     # Layer 3: LLM synthesis
     llm_result = _llm_synthesis(
         problem, raw_terms, expanded_concepts,
-        activated_clusters, bridge_concepts, config
+        activated_clusters, activated_disciplines, bridge_concepts, config
     )
 
-    # Merge LLM disciplines with cluster disciplines
-    all_disciplines = list(set(
+    # Use LLM result to supplement clusters — not to override or expand arbitrarily
+    # Strategy: start from cluster-derived themes (already filtered by threshold)
+    # then add LLM-suggested themes only if they match config theme_ids
+    # and were explicitly suggested with a concrete reason
+
+    # LLM-identified disciplines — only add if the cluster match missed something real
+    llm_disciplines = llm_result.get("disciplines_identified", [])
+    llm_bridges     = llm_result.get("bridge_concepts", [])
+
+    # Keep all cluster disciplines, add LLM disciplines only if they map to config
+    all_disciplines = list(dict.fromkeys(
         activated_disciplines +
-        llm_result.get("disciplines_identified", [])
+        [d for d in llm_disciplines if d.lower() in {
+            t["theme_id"].replace("_", " ") for t in config.get("themes", [])
+        } or any(
+            d.lower() in tid.lower() or tid.lower() in d.lower()
+            for tid in {t["theme_id"] for t in config.get("themes", [])}
+        )]
     ))
-    all_bridges = list(set(
-        bridge_concepts +
-        llm_result.get("bridge_concepts", [])
-    ))
+    all_bridges = list(set(bridge_concepts + llm_bridges))
 
-    # Map to config theme_ids
-    cluster_themes = _disciplines_to_themes(all_disciplines, config)
+    # Map cluster disciplines to themes — these are the authoritative themes
+    cluster_themes = _disciplines_to_themes(activated_disciplines, config)
 
-    # Add LLM-suggested themes that match config
+    # LLM-suggested themes supplement cluster themes but are capped:
+    # - Must be explicitly in config
+    # - Must have a specific reason (not just "relevant")
+    # - Cannot add more than N themes beyond what clusters found
+    # This prevents LLM from re-introducing philosophy_of_mind on agro questions
     config_theme_ids = {t["theme_id"] for t in config.get("themes", [])}
-    llm_themes = [
-        s["theme_id"] for s in llm_result.get("suggested_themes", [])
-        if s.get("theme_id") in config_theme_ids
-    ]
+    MAX_LLM_ADDITIONS = max(2, len(cluster_themes) // 2)  # at most half again
 
-    final_themes = list(dict.fromkeys(cluster_themes + llm_themes))
+    llm_additions = []
+    for s in llm_result.get("suggested_themes", []):
+        if len(llm_additions) >= MAX_LLM_ADDITIONS:
+            break
+        tid    = s.get("theme_id", "")
+        reason = s.get("relevance_reason", "")
+        if (tid in config_theme_ids
+                and tid not in cluster_themes
+                and len(reason) > 30):   # must be substantive reason
+            llm_additions.append(tid)
 
-    # If still nothing matched — activate ALL themes (better broad than blind)
+    # Final list: cluster themes are primary, LLM supplements
+    seen = set()
+    final_themes = []
+    for t in cluster_themes + llm_additions:
+        if t not in seen:
+            seen.add(t)
+            final_themes.append(t)
+
+    # If nothing matched — fallback to all themes rather than running blind
     if not final_themes:
         final_themes = [t["theme_id"] for t in config.get("themes", [])]
         logger.warning("[ConceptMapper] No themes matched — activating all themes")
@@ -469,7 +588,6 @@ def expand(problem: str, run_id: str, config: dict) -> dict:
         "bridge_concepts":      all_bridges,
         "final_themes":         final_themes,
         "llm_reasoning":        llm_result.get("conceptual_translation", ""),
-        "overlooked_angles":    llm_result.get("overlooked_angles", []),
         "llm_suggested_themes": llm_result.get("suggested_themes", [])
     }
 
@@ -524,9 +642,5 @@ def print_expansion_report(result: dict):
     print(f"  Bridge concepts: {', '.join(result['bridge_concepts'][:8])}")
     print(f"  Final themes:  {', '.join(result['final_themes'])}")
     if result.get("llm_reasoning"):
-        print(f"\n  Translation:   {result['llm_reasoning'][:200]}...")
-    if result.get("overlooked_angles"):
-        print(f"\n  Non-obvious angles:")
-        for a in result["overlooked_angles"][:5]:
-            print(f"    - {a}")
+        print(f"\n  Translation:   {result['llm_reasoning'][:200]}")
     print(f"{'─'*60}\n")

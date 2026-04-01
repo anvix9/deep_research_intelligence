@@ -170,6 +170,16 @@
           "seed": "AI alignment",
           "expansion_depth": 1,
           "boundary_note": "stay within AI safety and alignment"
+        },
+        {
+          "seed": "machine vision learning",
+          "expansion_depth": 1,
+          "boundary_note": "stay within learning algorithms"
+        },
+        {
+          "seed": "Artificial general intelligence",
+          "expansion_depth": 1,
+          "boundary_note": "stay within learning algorithms, new generation of ai."
         }
       ],
       "sources": [
@@ -647,6 +657,70 @@
         "openalex",
         "semantic_scholar",
         "core"
+      ]
+    },
+    {
+      "theme_id": "agriculture_food_systems",
+      "label": "Agriculture and Food Systems",
+      "keywords": [
+        {
+          "seed": "smallholder farming",
+          "expansion_depth": 1,
+          "boundary_note": "stay within small-scale agricultural production"
+        },
+        {
+          "seed": "agricultural sustainability",
+          "expansion_depth": 1,
+          "boundary_note": "stay within sustainable agricultural practices"
+        },
+        {
+          "seed": "food security",
+          "expansion_depth": 1,
+          "boundary_note": "stay within food availability and access"
+        },
+        {
+          "seed": "agroecology",
+          "expansion_depth": 1,
+          "boundary_note": "stay within ecological approaches to agriculture"
+        }
+      ],
+      "sources": [
+        "openalex",
+        "pubmed",
+        "semantic_scholar",
+        "core"
+      ]
+    },
+    {
+      "theme_id": "development_studies",
+      "label": "Development Studies and Rural Policy",
+      "keywords": [
+        {
+          "seed": "rural development",
+          "expansion_depth": 1,
+          "boundary_note": "stay within rural economic and social development"
+        },
+        {
+          "seed": "socioeconomic dimensions",
+          "expansion_depth": 1,
+          "boundary_note": "stay within social and economic analysis"
+        },
+        {
+          "seed": "sustainable development",
+          "expansion_depth": 1,
+          "boundary_note": "stay within SDG frameworks and implementation"
+        },
+        {
+          "seed": "agrarian political economy",
+          "expansion_depth": 1,
+          "boundary_note": "stay within political economy of agriculture"
+        }
+      ],
+      "sources": [
+        "openalex",
+        "semantic_scholar",
+        "core",
+        "jstor"
       ]
     }
   ],

@@ -43,11 +43,11 @@ AGENT_MAX_TOKENS = {
     "historian":   10000,  # chronological map can be long
     "synthesizer": 10000,  # narrative + full bibliography
     "gaper":        8192,
-    "vision":       8192,
+    "vision":      10000,
     "rude":         8192,
     "thinker":      8192,
     "social":       4096,
-    "scribe":       8192,
+    "scribe":      16000,
 }
 
 
