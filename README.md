@@ -67,7 +67,7 @@ Three mandatory review breaks where the pipeline stops, produces a structured su
 | PhilPapers | Philosophy index | Optional (free) — skipped gracefully without key |
 | PhilArchive | Open access philosophy | None — OAI-PMH |
 | PhilSci-Archive | Philosophy of science | None — OAI-PMH |
-| Consensus | Academic Semantic Search | Optional (paid) |
+| Consensus | Academic Semantic Search | Optional via MCP (paid) |
 | **Google Books** | Books and monographs | Optional (free) — Grounder only |
 | **Open Library** | Books and monographs | None — Grounder only |
 | **Web search** | Broad coverage | Via Anthropic API — Grounder only |
