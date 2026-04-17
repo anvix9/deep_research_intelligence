@@ -1,5 +1,5 @@
 """
-API Key Manager
+API Key Manager - Last version
 ---------------
 Loads API keys from .env file and environment variables.
 Provides keys to all source handlers.
