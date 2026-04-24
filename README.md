@@ -16,7 +16,7 @@ The final main artifact is an "understanding_map". See this <a href="https://git
 <br/>
 For a blog-post-style output from raw results, see this <a href="https://github.com/anvix9/basis_research_agents/blob/main/artifacts/RUN-20260331-152508-D296_blog_post.md">example</a>.
 
-10 specialised agents run in sequence, each building on the last. They pull from live academic APIs — not LLM training data — so every finding is traceable to a real, current source. The pipeline distinguishes between what a field has established, what it has tried and abandoned, where the genuine gaps are, and what is worth proposing next. At three points, it stops and hands control back to you.
+10 specialised agents run in sequence, each building on the last. They pull from live academic APIs, so every finding is traceable to a real, current source with a with persistent SQLite database. The pipeline distinguishes between what a field has established, what it has tried and abandoned, where the genuine gaps are, and what is worth proposing next. At three points, it stops and hands control back to you.
 
 ---
 
@@ -45,7 +45,7 @@ For a blog-post-style output from raw results, see this <a href="https://github.
 
 ---
 
-## The three breaks — human-in-the-loop supervision
+## The three breaks - human-in-the-loop supervision
 
 Unlike autonomous agentic systems, SEEKER has three forced stops where the pipeline waits for your instructions before continuing.
 
