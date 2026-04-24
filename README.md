@@ -178,15 +178,6 @@ python3 export_seminal.py --run RUN-XXXXXXXX --jekyll
 
 ---
 
-## Known limitations — v1.0.0
-
-- **Token cost on Consensus.** Consensus returns verbose plain text requiring regex parsing; it is gated behind `agent_sources` config and off by default for most agents.
-- **No automated cross-run synthesis.** Each run is self-contained; comparing insights across runs is manual.
-- **Narrative contamination risk.** A "Noter" agent concept (deterministic briefing layer) has been validated as a real need but not yet implemented — implementing it as a reasoning agent risks narrative bleed between agents.
-- **Single-language output.** Final artefacts inherit the language of the problem statement; no automated translation.
-
----
-
 ## Licence
 
 MIT — see `LICENCE`.
