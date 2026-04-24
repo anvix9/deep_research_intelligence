@@ -180,5 +180,3 @@ python3 main.py collect
 MIT — see `LICENCE`.
 
 Data source licences: OpenAlex (CC0), arXiv metadata (CC0), PubMed metadata (public domain), Open Library metadata (CC0 / CC BY), PhilArchive (CC BY-SA). Consensus, Semantic Scholar, CORE, and Google Books are subject to their respective terms of service.
-
-Built with Claude (Anthropic) and Ollama.
