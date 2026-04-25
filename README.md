@@ -1,9 +1,9 @@
 
 <div align="center">
 
-# 📜 [Submit a Research Question →](https://anvix9.github.io/request)
+# 📜 [(BETA) - Submit a Research Question →](https://anvix9.github.io/request)
 
-### **Free public testing - get an Understanding Map for your research question, by email, within 1-2 days or within the week.**
+### **Free public testing - get an Understanding Map for your research question, by email, within 1-2 days.**
 
 > Open to social sciences · humanities · philosophy · law · computing · interdisciplinary studies.
 > *Medical & clinical questions coming soon.*
