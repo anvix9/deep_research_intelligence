@@ -1,6 +1,6 @@
 [project]
-name = "aranea"
-version = "10.4.0"
+name = "SEEKER"
+version = "1.0.0"
 description = "Multi-agent deep research intelligence pipeline"
 readme = "README.md"
 requires-python = ">=3.11"
