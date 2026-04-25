@@ -1,3 +1,19 @@
+
+<div align="center">
+
+# 📜 [Submit a Research Question →](https://anvix9.github.io/request/)
+
+### **Free public testing - get an Understanding Map for your research question, by email, within 1-2 days or within the week.**
+
+> Open to social sciences · humanities · philosophy · law · computing · interdisciplinary studies.
+> *Medical & clinical questions coming soon.*
+
+[**→ Open the request form**](https://anvix9.github.io/request/) &nbsp; · &nbsp; [**📝 Already received your document? Share feedback →**](https://anvix9.github.io/feedback/)
+
+---
+
+</div>
+
 # SEEKER — Multi-Agent Deep Research Intelligence Pipeline
 
 **SEEKER** is a 10-agent research pipeline that conducts deep, traceable academic research by orchestrating specialized agents across live data sources. It builds a persistent **argument tree** where every claim traces to verifiable evidence — papers, books, legal documents, news articles, court decisions, testimony, or archival records.
