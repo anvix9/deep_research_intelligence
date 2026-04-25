@@ -8,7 +8,7 @@
 > Open to social sciences · humanities · philosophy · law · computing · interdisciplinary studies.
 > *Medical & clinical questions coming soon.*
 
-[**→ Open the request form**](https://anvix9.github.io/request/) &nbsp; · &nbsp; [**📝 Already received your document? Share feedback →**](https://anvix9.github.io/feedback/)
+[**→ Open the request form**](https://anvix9.github.io/request) &nbsp; · &nbsp; [**📝 Already received your document? Share feedback →**](https://anvix9.github.io/feedback)
 
 ---
 
