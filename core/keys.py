@@ -82,6 +82,12 @@ def philpapers_key() -> str:
 def anthropic() -> str:
     return get("ANTHROPIC_API_KEY", required=True, source_name="Anthropic Claude API")
 
+def deepseek() -> str:
+    return get("DEEPSEEK_API_KEY", required=False, source_name="DeepSeek (Anthropic-compatible API)")
+
+def omlx() -> str:
+    return get("OMLX_API_KEY", required=False, source_name="oMLX (local Anthropic-compatible server)")
+
 def google_books() -> str:
     return get("GOOGLE_BOOKS_API_KEY", required=False, source_name="Google Books (optional — higher quota)")
 
@@ -111,8 +117,29 @@ def print_key_status():
         ("SCOPUS_API_KEY",          "Scopus",           False, "dev.elsevier.com → Create API Key"),
         ("SCOPUS_INST_TOKEN",        "Scopus Inst Token",False, "email datasupport@elsevier.com"),
         ("GOOGLE_BOOKS_API_KEY",    "Google Books",     False, "console.cloud.google.com → Books API"),
-        ("ANTHROPIC_API_KEY",       "Anthropic Claude", True,  "console.anthropic.com"),
+        ("ANTHROPIC_API_KEY",       "Anthropic Claude", False, "console.anthropic.com"),
+        ("DEEPSEEK_API_KEY",        "DeepSeek",         False, "platform.deepseek.com/api_keys"),
+        ("OMLX_API_KEY",            "oMLX (local)",     False, "your local oMLX server config"),
     ]
+
+    # LLM backend status header
+    try:
+        from core import llm as _llm
+        client = _llm.get_client()
+        active = client.active_backend()
+        fallback = client.fallback_backend()
+        ok, detail = client.active_backend_status()
+        backend_line = (
+            f"  Backend: {active} {'✅' if ok else '⚠️'} {detail}"
+            f"   (fallback: {fallback or 'none'})"
+        )
+    except Exception as e:
+        backend_line = f"  Backend: <error resolving — {e}>"
+
+    print(f"\n  {'─'*60}")
+    print(f"  LLM Backend")
+    print(f"  {'─'*60}")
+    print(backend_line)
     print(f"\n  {'─'*60}")
     print(f"  API Key Status")
     print(f"  {'─'*60}")

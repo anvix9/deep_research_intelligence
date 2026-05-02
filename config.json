@@ -1,6 +1,32 @@
 {
   "_description": "Pipeline theme bank and source configuration. You maintain this manually.",
   "_version": "2.0",
+  "llm": {
+    "_doc": "Backend selection. Override at runtime with LLM_BACKEND env var or --backend CLI flag. fallback_backend is opt-in cross-backend fallback (null = no cross-backend fallback).",
+    "backend": "anthropic",
+    "fallback_backend": null,
+    "models": {
+      "anthropic": {
+        "heavy": "claude-sonnet-4-5",
+        "light": "claude-haiku-4-5-20251001"
+      },
+      "deepseek": {
+        "heavy": "deepseek-v4-pro",
+        "light": "deepseek-v4-flash",
+        "base_url": "https://api.deepseek.com/anthropic"
+      },
+      "omlx": {
+        "heavy": "Qwen3.6-35B-A3B-4bit",
+        "light": "gemma-4-e4b-it-8bit",
+        "base_url": "http://127.0.0.1:8000"
+      },
+      "ollama": {
+        "heavy": "deepseek-r1:8b",
+        "light": "llama3.2:3b",
+        "base_url": "http://localhost:11434"
+      }
+    }
+  },
   "themes": [
     {
       "theme_id": "philosophy_of_mind",

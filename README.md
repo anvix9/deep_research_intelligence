@@ -103,39 +103,43 @@ python3 main.py run --problem "your problem" --run-id RUN-20260407-022355-242D -
 
 The pipeline detects which agents already completed (by checking the database) and skips them.
 
-## Using Ollama (Free, Local, No API Key)
+## Choosing an LLM Backend
 
-SEEKER works with local models via [Ollama](https://ollama.com/) as a fallback. No cloud API needed.
+SEEKER supports four backends. Pick one with `--backend`, the `LLM_BACKEND` env var, or by editing `config.json`'s `llm.backend` field — the CLI flag wins, then the env var, then the config file, then legacy auto-detect (Anthropic if `ANTHROPIC_API_KEY` is set, else Ollama).
 
-### Setup
+| Backend | Heavy / Light | Cost / Locality | API key |
+|---|---|---|---|
+| `anthropic` | `claude-sonnet-4-5` / `claude-haiku-4-5-20251001` | Cloud, paid | `ANTHROPIC_API_KEY` |
+| `deepseek` | `deepseek-v4-pro` / `deepseek-v4-flash` (Anthropic-compatible endpoint) | Cloud, paid | `DEEPSEEK_API_KEY` |
+| `omlx` | `Qwen3.6-35B-A3B-4bit` / `gemma-4-e4b-it-8bit` | Local Anthropic-compatible server | `OMLX_API_KEY` |
+| `ollama` | `deepseek-r1:8b` / `llama3.2:3b` | Local, free | none |
 
 ```bash
-# Install Ollama
+python3 main.py run --problem "..." --backend deepseek
+LLM_BACKEND=omlx python3 main.py run --problem "..."
+```
+
+**Within-backend fallback** (heavy → light model) is automatic. **Cross-backend fallback is opt-in**: set `LLM_FALLBACK_BACKEND` or `config.json` `llm.fallback_backend` if you want failure on the chosen backend to route to a second backend instead of raising. The default is no cross-backend fallback — picking a backend means staying on it.
+
+### Local-only mode
+
+For Ollama:
+
+```bash
 curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull a model (14B+ recommended for research quality)
-ollama pull qwen2.5:14b
-
-# Or a smaller model for testing
-ollama pull qwen2.5:7b
+ollama pull deepseek-r1:8b   # heavy
+ollama pull llama3.2:3b      # light
+LLM_BACKEND=ollama python3 main.py run --problem "..."
 ```
 
-### Configuration
+For oMLX (a local Anthropic-compatible server) you'd run `omlx serve --port 8000`, set `OMLX_API_KEY`, and pass `--backend omlx`.
 
-Leave `ANTHROPIC_API_KEY` empty in your `.env` file. The pipeline auto-detects Ollama on `localhost:11434` and uses it for all agents.
+### What to expect from local models
 
-```
-# .env — leave blank for Ollama-only mode
-ANTHROPIC_API_KEY=
-```
-
-### What to expect
-
-Local models (7B–14B) produce usable results but with lower quality than Claude:
+Local models produce usable results but with lower quality than the cloud options:
 - Sub-question decomposition may be shallower
 - JSON parsing failures are more frequent (the pipeline has fallback parsers)
 - Synthesis quality depends heavily on model size
-- 14B+ is recommended; 7B works but produces thin outputs
 
 The pipeline is designed to degrade gracefully — every JSON parser has a fallback, every agent has error handling, and the argument tree preserves whatever was successfully parsed.
 

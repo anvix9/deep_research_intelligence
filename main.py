@@ -423,18 +423,29 @@ def _agent_done(run_id: str, agent: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def cmd_run(args):
-    # Check ANTHROPIC_API_KEY is available before starting
     import os
     from core import llm as llm_module
+
+    # --backend CLI flag wins; export to env so the LLM router (and any
+    # later subprocess) sees it. Reset the cached client so the new
+    # backend selection takes effect.
+    if getattr(args, "backend", None):
+        os.environ["LLM_BACKEND"] = args.backend
+        llm_module.reset_client()
+
     client = llm_module.get_client()
-    if client.anthropic_client is None:
-        print("\n  ⚠️  WARNING: ANTHROPIC_API_KEY is not set or not loaded.")
-        print("     The pipeline will use Ollama (local) for all LLM calls.")
-        print("     To use Claude API: add ANTHROPIC_API_KEY to your .env file.")
-        print("     Continuing in 5 seconds...\n")
+    active = client.active_backend()
+    fallback = client.fallback_backend()
+    ok, detail = client.active_backend_status()
+
+    print(f"\n  Backend: {active}  {'✅' if ok else '⚠️ '} {detail}")
+    print(f"  Fallback backend: {fallback or 'none (within-backend fallback only)'}")
+    if not ok:
+        print(f"     The active backend is not ready. Fix the credential / endpoint")
+        print(f"     and re-run, or pick a different backend with --backend / LLM_BACKEND.")
+        print(f"     Continuing in 5 seconds...\n")
         import time; time.sleep(5)
-    else:
-        print("\n  ✅  Claude API key loaded — using Claude for all agents.")
+
     run_pipeline(
         problem=args.problem,
         run_id=args.run_id,
@@ -640,6 +651,9 @@ Commands:
     p_run.add_argument("--problem", required=True, help="Research problem statement")
     p_run.add_argument("--run-id",  default=None,  help="Resume an existing run")
     p_run.add_argument("--resume",  action="store_true", help="Resume from last completed step")
+    p_run.add_argument("--backend", choices=["anthropic", "deepseek", "omlx", "ollama"],
+                       default=None,
+                       help="LLM backend (overrides LLM_BACKEND env and config.json llm.backend)")
     p_run.set_defaults(func=cmd_run)
 
     # collect
