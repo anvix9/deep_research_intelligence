@@ -1,6 +1,6 @@
  
 {
-  "_comment": "These info are NOT CORRECT, they are just THERE FOR INFORMATION PURPOSES!!! That's ALL!!"
+  "_comment": "These info are NOT CORRECT, they are just THERE FOR INFORMATION PURPOSES!!!"
   "client_info": {
     "redirect_uris": [
       "http://localhost:9753/callback"
